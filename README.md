@@ -1,7 +1,7 @@
 
 # Swagger Editor as a native application - with tab support
 
-####Instructions for creating a native application wrapper around the web application swagger-editor.
+#### Instructions for creating a native application wrapper around the web application swagger-editor.
 
 **Credit and Thanks to:**
  - SmartBear & swagger-api for **swagger-editor**
