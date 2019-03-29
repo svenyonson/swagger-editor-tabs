@@ -10,7 +10,7 @@
 
 ## Problems
 
-1. The "save" mechanism in the editor only lets you download the document as "~/Downloads/openapi.yaml". Then you have to rename/move to the desired location.
+1. The "save" mechanism in the editor only lets you download the document as "~/Downloads/openapi.yaml". You then have to rename/move to the desired location.
 
 2. Has to be run in a browser window
 
