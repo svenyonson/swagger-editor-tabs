@@ -1,0 +1,121 @@
+From b89274f50f28186953deb77d3b281a569ff1dc7e Mon Sep 17 00:00:00 2001
+From: Steve Johnson <s.johnson@cablelabs.com>
+Date: Fri, 29 Mar 2019 09:35:47 -0600
+Subject: [PATCH] save filename on save/import and apply to document.title
+ (tabname)
+
+---
+ src/plugins/local-storage/index.js                               | 9 +++++++++
+ .../components/ImportFileMenuItem.jsx                            | 6 ++++++
+ src/standalone/topbar/topbar.jsx                                 | 8 ++++++++
+ 3 files changed, 23 insertions(+)
+
+diff --git a/src/plugins/local-storage/index.js b/src/plugins/local-storage/index.js
+index 3cb8ba3a..2b05d617 100644
+--- a/src/plugins/local-storage/index.js
++++ b/src/plugins/local-storage/index.js
+@@ -1,5 +1,6 @@
+ import PetstoreYaml from "./petstore"
+ const CONTENT_KEY = "swagger-editor-content"
++const TITLE_KEY = "swagger-editor-title"
+ 
+ let localStorage = window.localStorage
+ 
+@@ -7,6 +8,7 @@ export const updateSpec = (ori) => (...args) => {
+   let [spec] = args
+   ori(...args)
+   saveContentToStorage(spec)
++  saveTitleToStorage(window.document.title)
+ }
+ 
+ export default function(system) {
+@@ -14,6 +16,7 @@ export default function(system) {
+   setTimeout(() => {
+     if(localStorage.getItem(CONTENT_KEY)) {
+       system.specActions.updateSpec(localStorage.getItem(CONTENT_KEY))
++      window.document.title = localStorage.getItem(TITLE_KEY)
+     } else if(localStorage.getItem("ngStorage-SwaggerEditorCache")) {
+       // Legacy migration for swagger-editor 2.x
+       try {
+@@ -27,6 +30,8 @@ export default function(system) {
+       }
+     } else {
+       system.specActions.updateSpec(PetstoreYaml)
++      window.document.title = "Swagger Petstore"
++      saveTitleToStorage(window.document.title)
+     }
+   }, 0)
+   return {
+@@ -43,3 +48,7 @@ export default function(system) {
+ function saveContentToStorage(str) {
+   return localStorage.setItem(CONTENT_KEY, str)
+ }
++
++function saveTitleToStorage(str) {
++  return localStorage.setItem(TITLE_KEY, str)
++}
+diff --git a/src/standalone/topbar-menu-file-import_file/components/ImportFileMenuItem.jsx b/src/standalone/topbar-menu-file-import_file/components/ImportFileMenuItem.jsx
+index bfe2925b..26ca3fc1 100644
+--- a/src/standalone/topbar-menu-file-import_file/components/ImportFileMenuItem.jsx
++++ b/src/standalone/topbar-menu-file-import_file/components/ImportFileMenuItem.jsx
+@@ -27,12 +27,18 @@ export default class ImportFileMenuItem extends Component {
+     }
+ 
+     fileReader.readAsText(fileList.item(0), "UTF-8")
++    this.rememberFilename(fileList.item(0))
+   }
+   render() {
+     return <li>
+       <button type="button" onClick={this.onClick}>Import file</button>
+     </li>
+   }
++  // On load/save, set tab to filename
++  rememberFilename = (path) => {
++    document.title = path.name;
++  }
++
+ }
+ 
+ ImportFileMenuItem.propTypes = {
+diff --git a/src/standalone/topbar/topbar.jsx b/src/standalone/topbar/topbar.jsx
+index 40833072..df5a3f22 100644
+--- a/src/standalone/topbar/topbar.jsx
++++ b/src/standalone/topbar/topbar.jsx
+@@ -80,12 +80,18 @@ export default class Topbar extends React.Component {
+     })
+   }
+ 
++  // On load/save, set tab to filename
++  rememberFilename = (path) => {
++    document.title = path.substring(path.lastIndexOf('/')+1);
++  }
++
+   downloadFile = (content, fileName) => {
+     if(window.Cypress) {
+       // HACK: temporary workaround for https://github.com/cypress-io/cypress/issues/949
+       // allows e2e tests to proceed without choking on file download native event
+       return
+     }
++    this.rememberFilename(fileName)
+     return reactFileDownload(content, fileName)
+   }
+ 
+@@ -93,6 +99,7 @@ export default class Topbar extends React.Component {
+ 
+   importFromURL = () => {
+     let url = prompt("Enter the URL to import from:")
++    this.rememberFilename(url)
+ 
+     if(url) {
+       fetch(url)
+@@ -238,6 +245,7 @@ export default class Topbar extends React.Component {
+   clearEditor = () => {
+     if(window.localStorage) {
+       window.localStorage.removeItem("swagger-editor-content")
++      window.document.title = "Untitled"
+       this.props.specActions.updateSpec("")
+     }
+   }
+-- 
+2.14.3 (Apple Git-98)
+
